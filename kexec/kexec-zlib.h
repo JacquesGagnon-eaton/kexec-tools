@@ -7,4 +7,5 @@
 #include "config.h"
 
 char *zlib_decompress_file(const char *filename, off_t *r_size);
+char *zlib_decompress_buffer(const char *buffer, off_t len, off_t *r_size);
 #endif /* __KEXEC_ZLIB_H */
