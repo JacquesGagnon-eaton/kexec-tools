@@ -67,6 +67,10 @@ dist				+= kexec/kexec-uImage.c
 $(ARCH)_UIMAGE			=
 KEXEC_SRCS			+= $($(ARCH)_UIMAGE)
 
+dist				+= kexec/kexec-fitImage.c
+$(ARCH)_FITIMAGE		=
+KEXEC_SRCS			+= $($(ARCH)_FITIMAGE)
+
 dist				+= kexec/fs2dt.c kexec/fs2dt.h
 $(ARCH)_FS2DT			=
 KEXEC_SRCS			+= $($(ARCH)_FS2DT)
