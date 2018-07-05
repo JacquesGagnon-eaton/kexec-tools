@@ -55,6 +55,8 @@ struct file_type file_type[] = {
 	{"vmlinux", elf_arm64_probe, elf_arm64_load, elf_arm64_usage},
 	{"Image", image_arm64_probe, image_arm64_load, image_arm64_usage},
 	{"uImage", uImage_arm64_probe, uImage_arm64_load, uImage_arm64_usage},
+	{"fitImage", fitImage_arm64_probe, fitImage_arm64_load,
+		fitImage_arm64_usage},
 };
 
 int file_types = sizeof(file_type) / sizeof(file_type[0]);
@@ -613,6 +615,10 @@ int arm64_load_other_segments(struct kexec_info *info,
 	if (arm64_opts.dtb) {
 		dtb.name = "dtb_user";
 		dtb.buf = slurp_file(arm64_opts.dtb, &dtb.size);
+	} else if (info->dtb) {
+		dtb.name = "dtb_user";
+		dtb.buf = info->dtb;
+		dtb.size = info->dtb_size;
 	} else {
 		result = read_1st_dtb(&dtb);
 
@@ -637,8 +643,13 @@ int arm64_load_other_segments(struct kexec_info *info,
 	else
 		hole_max = ULONG_MAX;
 
-	if (arm64_opts.initrd) {
-		initrd_buf = slurp_file(arm64_opts.initrd, &initrd_size);
+	if (arm64_opts.initrd || info->initrd) {
+		if (arm64_opts.initrd)
+			initrd_buf = slurp_file(arm64_opts.initrd, &initrd_size);
+		else {
+			initrd_buf = info->initrd;
+			initrd_size = info->initrd_size;
+		}
 
 		if (!initrd_buf)
 			fprintf(stderr, "kexec: Empty ramdisk file.\n");

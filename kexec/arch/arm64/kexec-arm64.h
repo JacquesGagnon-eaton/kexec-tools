@@ -34,6 +34,10 @@ int uImage_arm64_probe(const char *buf, off_t len);
 int uImage_arm64_load(int argc, char **argv, const char *buf, off_t len,
 		      struct kexec_info *info);
 void uImage_arm64_usage(void);
+int fitImage_arm64_probe(const char *buf, off_t len);
+int fitImage_arm64_load(int argc, char **argv, const char *buf, off_t len,
+		      struct kexec_info *info);
+void fitImage_arm64_usage(void);
 
 off_t initrd_base;
 off_t initrd_size;
