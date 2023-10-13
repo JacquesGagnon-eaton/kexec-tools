@@ -16,9 +16,11 @@ arm64_KEXEC_SRCS += \
 	kexec/arch/arm64/kexec-elf-arm64.c \
 	kexec/arch/arm64/kexec-uImage-arm64.c \
 	kexec/arch/arm64/kexec-image-arm64.c \
-	kexec/arch/arm64/kexec-vmlinuz-arm64.c
+	kexec/arch/arm64/kexec-vmlinuz-arm64.c \
+	kexec/arch/arm64/kexec-fitImage-arm64.c
 
 arm64_UIMAGE = kexec/kexec-uImage.c
+arm64_FITIMAGE = kexec/kexec-fitImage.c
 
 arm64_ARCH_REUSE_INITRD =
 arm64_ADD_SEGMENT =

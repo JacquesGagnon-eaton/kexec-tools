@@ -7,6 +7,7 @@
 #include <getopt.h>
 #include <arch/options.h>
 #include "kexec.h"
+#include "kexec-zlib.h"
 #include <kexec-uImage.h>
 
 #ifdef HAVE_LIBZ
@@ -127,116 +128,15 @@ int uImage_probe_ramdisk(const char *buf, off_t len, unsigned int arch)
 	return !(type == IH_TYPE_RAMDISK);
 }
 
-#ifdef HAVE_LIBZ
-/* gzip flag byte */
-#define ASCII_FLAG	0x01 /* bit 0 set: file probably ascii text */
-#define HEAD_CRC	0x02 /* bit 1 set: header CRC present */
-#define EXTRA_FIELD	0x04 /* bit 2 set: extra field present */
-#define ORIG_NAME	0x08 /* bit 3 set: original file name present */
-#define COMMENT		0x10 /* bit 4 set: file comment present */
-#define RESERVED	0xE0 /* bits 5..7: reserved */
-
 static int uImage_gz_load(const char *buf, off_t len,
 		struct Image_info *image)
 {
-	int ret;
-	z_stream strm;
-	unsigned int skip;
-	unsigned int flags;
-	unsigned char *uncomp_buf;
-	unsigned int mem_alloc;
-
-	mem_alloc = 10 * 1024 * 1024;
-	uncomp_buf = malloc(mem_alloc);
-	if (!uncomp_buf)
+	image->buf = zlib_decompress_buffer(buf, len, &image->len);
+	if (!image->buf)
 		return -1;
 
-	memset(&strm, 0, sizeof(strm));
-
-	/* Skip magic, method, time, flags, os code ... */
-	skip = 10;
-
-	/* check GZ magic */
-	if (buf[0] != 0x1f || buf[1] != 0x8b) {
-		free(uncomp_buf);
-		return -1;
-	}
-
-	flags = buf[3];
-	if (buf[2] != Z_DEFLATED || (flags & RESERVED) != 0) {
-		puts ("Error: Bad gzipped data\n");
-		free(uncomp_buf);
-		return -1;
-	}
-
-	if (flags & EXTRA_FIELD) {
-		skip += 2;
-		skip += buf[10];
-		skip += buf[11] << 8;
-	}
-	if (flags & ORIG_NAME) {
-		while (buf[skip++])
-			;
-	}
-	if (flags & COMMENT) {
-		while (buf[skip++])
-			;
-	}
-	if (flags & HEAD_CRC)
-		skip += 2;
-
-	strm.avail_in = len - skip;
-	strm.next_in = (void *)buf + skip;
-
-	/* - activates parsing gz headers */
-	ret = inflateInit2(&strm, -MAX_WBITS);
-	if (ret != Z_OK) {
-		free(uncomp_buf);
-		return -1;
-	}
-
-	strm.next_out = uncomp_buf;
-	strm.avail_out = mem_alloc;
-
-	do {
-		ret = inflate(&strm, Z_FINISH);
-		if (ret == Z_STREAM_END)
-			break;
-
-		if (ret == Z_OK || ret == Z_BUF_ERROR) {
-			void *new_buf;
-			int inc_buf = 5 * 1024 * 1024;
-
-			mem_alloc += inc_buf;
-			new_buf = realloc(uncomp_buf, mem_alloc);
-			if (!new_buf) {
-				inflateEnd(&strm);
-				free(uncomp_buf);
-				return -1;
-			}
-
-			uncomp_buf = new_buf;
-			strm.next_out = uncomp_buf + mem_alloc - inc_buf;
-			strm.avail_out = inc_buf;
-		} else {
-			free(uncomp_buf);
-			printf("Error during decompression %d\n", ret);
-			return -1;
-		}
-	} while (1);
-
-	inflateEnd(&strm);
-	image->buf = (char *)uncomp_buf;
-	image->len = mem_alloc - strm.avail_out;
 	return 0;
 }
-#else
-static int uImage_gz_load(const char *UNUSED(buf), off_t UNUSED(len),
-		struct Image_info *UNUSED(image))
-{
-	return -1;
-}
-#endif
 
 int uImage_load(const char *buf, off_t len, struct Image_info *image)
 {

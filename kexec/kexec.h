@@ -168,6 +168,10 @@ struct kexec_info {
 	int initrd_fd;
 	char *command_line;
 	int command_line_len;
+	const char *initrd;
+	off_t initrd_size;
+	const char *dtb;
+	off_t dtb_size;
 
 	int skip_checks;
 	unsigned long elfcorehdr;
