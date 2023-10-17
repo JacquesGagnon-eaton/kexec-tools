@@ -2,6 +2,7 @@ dist += include/Makefile		\
 	include/config.h		\
 	include/config.h.in		\
 	include/kexec-uImage.h		\
+	include/kexec-fitImage.h	\
 	include/x86/x86-linux.h		\
 	include/x86/mb_info.h		\
 	include/x86/mb_header.h		\
